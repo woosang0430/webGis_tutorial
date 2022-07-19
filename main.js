@@ -10,6 +10,16 @@ import Modify from "ol/interaction/Modify";
 import Draw from "ol/interaction/Draw";
 import Snap from "ol/interaction/Snap";
 
+import proj4 from "proj4";
+import { register } from "ol/proj/proj4";
+import { transform } from "ol/proj";
+
+proj4.defs(
+  "EPSG:5179",
+  "+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+);
+register(proj4);
+
 const map = new Map({
   target: "map",
   layers: [
@@ -65,6 +75,7 @@ map.addInteraction(
     source,
   })
 );
+
 const clearBtn = document.querySelector("#clear");
 clearBtn.addEventListener("click", () => {
   source.clear();
@@ -79,4 +90,17 @@ source.on("change", () => {
   download.href = `data:application/json;charset=utf-8, ${encodeURIComponent(
     json
   )}`;
+
+  features.forEach((feature) => {
+    feature
+      .getGeometry()
+      .getCoordinates()
+      .forEach((coordinates) => {
+        coordinates.forEach((coordinate) => {
+          console.log(coordinate);
+          console.log(transform(coordinate, "EPSG:3857", "EPSG:5179"));
+          console.log("----------------------------------------------");
+        });
+      });
+  });
 });
