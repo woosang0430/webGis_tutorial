@@ -1,23 +1,67 @@
 import "./style.css";
 import Map from "ol/Map";
 import View from "ol/View";
-import { defaults as defaultControls } from "ol/control";
-import { defaults as defaultInteractions } from "ol/interaction";
-import TileLayer from "ol/layer/Tile";
-import OSM from "ol/source/OSM";
-import { KeyboardPan, KeyboardZoom } from "ol/interaction";
+import VectorLayer from "ol/layer/Vector";
+import VectorSource from "ol/source/Vector";
+import GeoJSON from "ol/format/GeoJSON";
+import DragAndDrop from "ol/interaction/DragAndDrop";
+import Select from "ol/interaction/Select";
+import Modify from "ol/interaction/Modify";
+import Draw from "ol/interaction/Draw";
+import Snap from "ol/interaction/Snap";
 
 const map = new Map({
-  controls: defaultControls(),
-  interactions: defaultInteractions().extend([
-    new KeyboardPan(),
-    new KeyboardZoom(),
-  ]),
-  layers: [new TileLayer({ source: new OSM() })],
   target: "map",
-  keyboardEventTarget: document,
+  layers: [
+    new VectorLayer({
+      source: new VectorSource({
+        format: new GeoJSON(),
+        url: "./data/countries.json",
+      }),
+    }),
+  ],
   view: new View({
-    center: [14135193.892664503, 4512192.435216382],
-    zoom: 13,
+    center: [0, 0],
+    zoom: 2,
   }),
 });
+
+const source = new VectorSource();
+
+const layer = new VectorLayer({
+  source: source,
+});
+
+map.addLayer(layer);
+
+// vectorData를 브라우저로 바로 옮실 수 있음
+map.addInteraction(
+  new DragAndDrop({
+    source: source,
+    formatConstructors: [GeoJSON],
+  })
+);
+
+const select = new Select();
+
+map.addInteraction(select);
+
+map.addInteraction(
+  new Modify({
+    features: select.getFeatures(),
+  })
+);
+
+map.addInteraction(
+  new Draw({
+    type: "Polygon",
+    source,
+  })
+);
+
+// 이미 그려진 vector data를 수정하는데 사용
+map.addInteraction(
+  new Snap({
+    source,
+  })
+);
